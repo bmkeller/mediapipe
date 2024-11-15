@@ -35,6 +35,7 @@ cv::Mat VideoProvider::GetNextFrame() {
     cv::Mat frame;
     capture_ >> frame;
     cv::flip(frame, frame, /*flipcode=HORIZONTAL*/ 1);
+    cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
     return frame;
   }
 }
