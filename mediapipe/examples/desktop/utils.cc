@@ -19,10 +19,10 @@ cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
     for (int x = 0; x < width; ++x) {
       // Calculate flipped x coordinate (width - 1 - x)
       int flipped_x = width - 1 - x;
-      image.at<cv::Vec3b>(y, x)[0] = bluePlane[y * width + flipped_x];  // Blue
+      image.at<cv::Vec3b>(y, x)[2] = bluePlane[y * width + flipped_x];  // Blue
       image.at<cv::Vec3b>(y, x)[1] =
           greenPlane[y * width + flipped_x];                           // Green
-      image.at<cv::Vec3b>(y, x)[2] = redPlane[y * width + flipped_x];  // Red
+      image.at<cv::Vec3b>(y, x)[0] = redPlane[y * width + flipped_x];  // Red
     }
   }
 
