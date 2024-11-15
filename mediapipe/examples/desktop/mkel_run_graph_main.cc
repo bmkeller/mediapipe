@@ -18,11 +18,13 @@
 #include "mediapipe/framework/port/parse_text_proto.h"
 #include "mediapipe/framework/port/status.h"
 #include "mediapipe/util/resource_util.h"
+#include "utils.h"
 #include "video_provider.h"
 
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
 constexpr char kWindowName[] = "MediaPipe";
+constexpr int kFpsWindowSize = 30;  // Calculate FPS over 30 frames
 
 ABSL_FLAG(std::string, calculator_graph_config_file, "",
           "Name of file containing text format CalculatorGraphConfig proto.");
@@ -92,26 +94,14 @@ absl::Status RunMPPGraph() {
   bool grab_frames = true;
   int frame_count = 0;
 
-  // Add FPS calculation variables using chrono
-  double fps = 0.0;
-  auto start_time = std::chrono::high_resolution_clock::now();
-  const int FPS_WINDOW = 30;  // Calculate FPS over 30 frames
+  FPSCounter fps_counter(kFpsWindowSize);
 
   while (grab_frames) {
     // Capture opencv camera or video frame.
     cv::Mat camera_frame = videoProvider.GetNextFrame();
 
-    // Calculate FPS every FPS_WINDOW frames
-    if (frame_count % FPS_WINDOW == 0) {
-      auto current_time = std::chrono::high_resolution_clock::now();
-      auto time_diff =
-          std::chrono::duration<double>(current_time - start_time).count();
-      fps = FPS_WINDOW / time_diff;
-      start_time = current_time;
-
-      std::cout << "FPS: " << std::fixed << std::setprecision(1) << fps
-                << std::endl;
-    }
+    fps_counter.update();
+    fps_counter.display();
 
     if (camera_frame.empty()) {
       if (videoProvider.SourceName() == "webcam") {
