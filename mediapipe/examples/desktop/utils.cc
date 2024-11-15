@@ -1,5 +1,8 @@
 #include "mediapipe/examples/desktop/utils.h"
 
+#include <iomanip>
+#include <iostream>
+
 cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
                            int height) {
   if (planarData.size() != width * height * 3) {
@@ -27,4 +30,28 @@ cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
   }
 
   return image;
+}
+
+FPSCounter::FPSCounter(int window_size)
+    : window_size_(window_size),
+      frame_count_(0),
+      fps_(0.0),
+      start_time_(std::chrono::high_resolution_clock::now()) {}
+
+void FPSCounter::update() {
+  frame_count_++;
+  if (frame_count_ % window_size_ == 0) {
+    auto current_time = std::chrono::high_resolution_clock::now();
+    auto time_diff =
+        std::chrono::duration<double>(current_time - start_time_).count();
+    fps_ = window_size_ / time_diff;
+    start_time_ = current_time;
+  }
+}
+
+double FPSCounter::getFPS() const { return fps_; }
+
+void FPSCounter::display() const {
+  std::cout << "[" << frame_count_ << "] FPS: " << std::fixed
+            << std::setprecision(1) << fps_ << " Hz" << std::endl;
 }
