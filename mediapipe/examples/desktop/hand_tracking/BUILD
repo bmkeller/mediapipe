@@ -48,8 +48,13 @@ cc_binary(
         "//mediapipe/modules/palm_detection:palm_detection_full.tflite",
     ],
     deps = [
-        "//mediapipe/examples/desktop:demo_run_graph_main",
+        #"//mediapipe/examples/desktop:demo_run_graph_main",
+        "//mediapipe/examples/desktop:mkel_run_graph_main",
         "//mediapipe/graphs/hand_tracking:desktop_tflite_calculators",
+        "//mediapipe/mkel:gesture_processor",
+    ],
+    linkopts = [
+        "-Wl,-rpath,@executable_path/libs"  # Set RPATH to look in a "libs" directory
     ],
 )
 

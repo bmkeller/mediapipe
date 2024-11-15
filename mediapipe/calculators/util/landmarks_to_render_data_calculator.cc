@@ -302,11 +302,17 @@ absl::Status LandmarksToRenderDataCalculator::Process(CalculatorContext* cc) {
   }
 
   if (cc->Inputs().HasTag(kLandmarksTag)) {
+    // std::cout << "MKEL: landmarks tag is present!" << std::endl;
+
     const LandmarkList& landmarks =
         cc->Inputs().Tag(kLandmarksTag).Get<LandmarkList>();
     if (visualize_depth) {
       GetMinMaxZ<LandmarkList, Landmark>(landmarks, &z_min, &z_max);
     }
+
+    // std::cout << "MKEL: landmarks, got: " << landmarks.DebugString()
+    //           << std::endl;
+
     // Only change rendering if there are actually z values other than 0.
     visualize_depth &= ((z_max - z_min) > 1e-3);
     if (visualize_depth) {
@@ -350,12 +356,22 @@ absl::Status LandmarksToRenderDataCalculator::Process(CalculatorContext* cc) {
   }
 
   if (cc->Inputs().HasTag(kNormLandmarksTag)) {
+    // std::cout << "MKEL: norm landmarks tag is present!" << std::endl;
+
     const NormalizedLandmarkList& landmarks =
         cc->Inputs().Tag(kNormLandmarksTag).Get<NormalizedLandmarkList>();
     if (visualize_depth) {
       GetMinMaxZ<NormalizedLandmarkList, NormalizedLandmark>(landmarks, &z_min,
                                                              &z_max);
     }
+
+    // std::cout << "MKEL: landmarks, got: " << landmarks.DebugString()
+    //           << landmarks.landmark_size() << std::endl;
+
+    // auto firstItem = landmarks.landmark(0);
+    // std::cout << "MKEL: first item: " << std::endl
+    //           << firstItem.DebugString() << std::endl;
+
     // Only change rendering if there are actually z values other than 0.
     visualize_depth &= ((z_max - z_min) > 1e-3);
     if (visualize_depth) {

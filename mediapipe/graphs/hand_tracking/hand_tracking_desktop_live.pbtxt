@@ -44,3 +44,11 @@ node {
   input_stream: "NORM_RECTS:1:multi_hand_rects"
   output_stream: "IMAGE:output_video"
 }
+
+# Subgraph that processes hand gestures (see gesture_processor.pbtxt).
+node {
+  calculator: "GestureProcessorSubgraph"
+  input_stream: "LANDMARKS:landmarks"
+  input_stream: "IMAGE:input_video"
+  input_stream: "HANDEDNESS:handedness"
+}
