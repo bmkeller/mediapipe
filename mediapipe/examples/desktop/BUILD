@@ -58,7 +58,15 @@ cc_library(
 
 cc_library(
     name="mkel_run_graph_main",
-    srcs=["mkel_run_graph_main.cc"],
+    srcs=[
+        "mkel_run_graph_main.cc",
+        "utils.cc",
+        "video_provider.cc",
+    ],
+    hdrs=[
+        "utils.h",
+        "video_provider.h",
+    ],
     deps=[
         "//mediapipe/framework:calculator_framework",
         "//mediapipe/framework/formats:image_frame",
