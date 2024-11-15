@@ -5,6 +5,8 @@
 
 cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
                            int height) {
+  const auto start_time = std::chrono::high_resolution_clock::now();
+
   if (planarData.size() != width * height * 3) {
     throw std::invalid_argument("Data size does not match dimensions");
   }
@@ -28,6 +30,12 @@ cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
       image.at<cv::Vec3b>(y, x)[0] = redPlane[y * width + flipped_x];  // Red
     }
   }
+
+  //   auto end_time = std::chrono::high_resolution_clock::now();
+  //   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+  //       end_time - start_time);
+  //   std::cout << "Planar RGB conversion took " << duration.count() << "ms"
+  //             << std::endl;
 
   return image;
 }
