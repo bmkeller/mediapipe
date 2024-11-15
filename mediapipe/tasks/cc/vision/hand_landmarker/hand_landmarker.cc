@@ -74,7 +74,7 @@ CalculatorGraphConfig CreateGraphConfig(
     std::unique_ptr<HandLandmarkerGraphOptionsProto> options,
     bool enable_flow_limiting) {
   api2::builder::Graph graph;
-  auto& subgraph = graph.AddNode(kHandLandmarkerGraphTypeName);
+  auto &subgraph = graph.AddNode(kHandLandmarkerGraphTypeName);
   subgraph.GetOptions<HandLandmarkerGraphOptionsProto>().Swap(options.get());
   graph.In(kImageTag).SetName(kImageInStreamName);
   graph.In(kNormRectTag).SetName(kNormRectStreamName);
@@ -97,7 +97,7 @@ CalculatorGraphConfig CreateGraphConfig(
 // Converts the user-facing HandLandmarkerOptions struct to the internal
 // HandLandmarkerGraphOptions proto.
 std::unique_ptr<HandLandmarkerGraphOptionsProto>
-ConvertHandLandmarkerGraphOptionsProto(HandLandmarkerOptions* options) {
+ConvertHandLandmarkerGraphOptionsProto(HandLandmarkerOptions *options) {
   auto options_proto = std::make_unique<HandLandmarkerGraphOptionsProto>();
   auto base_options_proto = std::make_unique<tasks::core::proto::BaseOptions>(
       tasks::core::ConvertBaseOptionsToProto(&(options->base_options)));
@@ -106,7 +106,7 @@ ConvertHandLandmarkerGraphOptionsProto(HandLandmarkerOptions* options) {
       options->running_mode != core::RunningMode::IMAGE);
 
   // Configure hand detector options.
-  auto* hand_detector_graph_options =
+  auto *hand_detector_graph_options =
       options_proto->mutable_hand_detector_graph_options();
   hand_detector_graph_options->set_num_hands(options->num_hands);
   hand_detector_graph_options->set_min_detection_confidence(
@@ -114,7 +114,7 @@ ConvertHandLandmarkerGraphOptionsProto(HandLandmarkerOptions* options) {
 
   // Configure hand landmark detector options.
   options_proto->set_min_tracking_confidence(options->min_tracking_confidence);
-  auto* hand_landmarks_detector_graph_options =
+  auto *hand_landmarks_detector_graph_options =
       options_proto->mutable_hand_landmarks_detector_graph_options();
   hand_landmarks_detector_graph_options->set_min_detection_confidence(
       options->min_hand_presence_confidence);
@@ -192,6 +192,7 @@ absl::StatusOr<HandLandmarkerResult> HandLandmarker::Detect(
   MP_ASSIGN_OR_RETURN(NormalizedRect norm_rect,
                       ConvertToNormalizedRect(image_processing_options, image,
                                               /*roi_allowed=*/false));
+
   MP_ASSIGN_OR_RETURN(
       auto output_packets,
       ProcessImageData(

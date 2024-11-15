@@ -47,8 +47,8 @@ inline float NormalizeRadians(float angle) {
   return angle - 2 * M_PI * std::floor((angle - (-M_PI)) / (2 * M_PI));
 }
 
-float ComputeRotation(const NormalizedLandmarkList& landmarks,
-                      const std::pair<int, int>& image_size) {
+float ComputeRotation(const NormalizedLandmarkList &landmarks,
+                      const std::pair<int, int> &image_size) {
   const float x0 = landmarks.landmark(kWristJoint).x() * image_size.first;
   const float y0 = landmarks.landmark(kWristJoint).y() * image_size.second;
 
@@ -69,8 +69,8 @@ float ComputeRotation(const NormalizedLandmarkList& landmarks,
 }
 
 absl::Status NormalizedLandmarkListToRect(
-    const NormalizedLandmarkList& landmarks,
-    const std::pair<int, int>& image_size, NormalizedRect* rect) {
+    const NormalizedLandmarkList &landmarks,
+    const std::pair<int, int> &image_size, NormalizedRect *rect) {
   const float rotation = ComputeRotation(landmarks, image_size);
   const float reverse_angle = NormalizeRadians(-rotation);
 
@@ -140,26 +140,28 @@ absl::Status NormalizedLandmarkListToRect(
 // mean of PIP joints at the top.
 class HandLandmarksToRectCalculator : public CalculatorBase {
  public:
-  static absl::Status GetContract(CalculatorContract* cc) {
+  static absl::Status GetContract(CalculatorContract *cc) {
     cc->Inputs().Tag(kNormalizedLandmarksTag).Set<NormalizedLandmarkList>();
     cc->Inputs().Tag(kImageSizeTag).Set<std::pair<int, int>>();
     cc->Outputs().Tag(kNormRectTag).Set<NormalizedRect>();
     return absl::OkStatus();
   }
 
-  absl::Status Open(CalculatorContext* cc) override {
+  absl::Status Open(CalculatorContext *cc) override {
     cc->SetOffset(TimestampDiff(0));
     return absl::OkStatus();
   }
 
-  absl::Status Process(CalculatorContext* cc) override {
+  absl::Status Process(CalculatorContext *cc) override {
     if (cc->Inputs().Tag(kNormalizedLandmarksTag).IsEmpty()) {
       return absl::OkStatus();
     }
+
     RET_CHECK(!cc->Inputs().Tag(kImageSizeTag).IsEmpty());
 
     std::pair<int, int> image_size =
         cc->Inputs().Tag(kImageSizeTag).Get<std::pair<int, int>>();
+
     const auto landmarks = GetPartialLandmarks(cc);
     auto output_rect = absl::make_unique<NormalizedRect>();
     MP_RETURN_IF_ERROR(
@@ -172,8 +174,8 @@ class HandLandmarksToRectCalculator : public CalculatorBase {
   }
 
  private:
-  NormalizedLandmarkList GetPartialLandmarks(CalculatorContext* cc) {
-    const auto& landmarks =
+  NormalizedLandmarkList GetPartialLandmarks(CalculatorContext *cc) {
+    const auto &landmarks =
         cc->Inputs().Tag(kNormalizedLandmarksTag).Get<NormalizedLandmarkList>();
     if (landmarks.landmark_size() == kNumLandmarks) {
       static constexpr int kPartialLandmarkIndices[]{0, 1,  2,  3,  5,  6,
