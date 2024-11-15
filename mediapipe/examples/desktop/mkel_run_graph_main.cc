@@ -99,7 +99,7 @@ absl::Status RunMPPGraph() {
 
   while (grab_frames) {
     // Capture opencv camera or video frame.
-    cv::Mat camera_frame_raw = videoProvider.GetNextFrame();
+    cv::Mat camera_frame = videoProvider.GetNextFrame();
 
     // Calculate FPS every FPS_WINDOW frames
     if (frame_count % FPS_WINDOW == 0) {
@@ -113,10 +113,7 @@ absl::Status RunMPPGraph() {
                 << std::endl;
     }
 
-    // std::cout << "[" << frame_count++ << "] " << camera_frame_raw.cols << "x"
-    //           << camera_frame_raw.rows << std::endl;
-
-    if (camera_frame_raw.empty()) {
+    if (camera_frame.empty()) {
       if (videoProvider.SourceName() == "webcam") {
         ABSL_LOG(INFO) << "Ignore empty frames from camera.";
         continue;
@@ -124,17 +121,6 @@ absl::Status RunMPPGraph() {
       ABSL_LOG(INFO) << "Empty frame, end of video reached.";
       break;
     }
-
-    cv::Mat camera_frame;
-
-    cv::cvtColor(camera_frame_raw, camera_frame, cv::COLOR_BGR2RGB);
-
-    // if (!load_video) {
-    //   cv::flip(camera_frame, camera_frame, /*flipcode=HORIZONTAL*/ 1);
-    // }
-
-    // std::cout << "Final frame size: " << camera_frame.cols << "x"
-    //           << camera_frame.rows << std::endl;
 
     // Wrap Mat into an ImageFrame.
     auto input_frame = absl::make_unique<mediapipe::ImageFrame>(
