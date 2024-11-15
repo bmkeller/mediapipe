@@ -590,6 +590,12 @@ new_local_repository(
 )
 
 new_local_repository(
+    name = "luxonis_depthai",
+    build_file = "@//third_party:luxonis_depthai.BUILD",
+    path = "/Users/michaelkeller/Documents/code/luxonis_cpp2/depthai-core",
+)
+
+new_local_repository(
     name = "macos_ffmpeg",
     build_file = "@//third_party:ffmpeg_macos.BUILD",
     path = "/usr/local/opt/ffmpeg",
