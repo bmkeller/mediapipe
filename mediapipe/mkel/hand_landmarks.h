@@ -1,5 +1,8 @@
 #pragma once
 
+// Defined here:
+// https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker
+
 namespace mediapipe {
 
 enum class LandmarkType : int {
