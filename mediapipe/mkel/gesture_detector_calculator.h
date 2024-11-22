@@ -7,6 +7,9 @@
 #include "mediapipe/framework/port/status.h"
 #include "mediapipe/mkel/hand_landmarks.h"
 
+#include "mediapipe/mkel/gestures.pb.h"
+#include "mediapipe/mkel/proto_writer.h"
+
 namespace mediapipe {
 
 class GestureRecognizerCalculator : public CalculatorBase {
@@ -19,6 +22,11 @@ class GestureRecognizerCalculator : public CalculatorBase {
 
   // Triggers when a gesture is detected.
   void OnGestureDetected();
+
+  private:
+    gestures::Gestures gesture_;
+    gestures::ProtoWriter proto_writer_;
+    int frame_index_ = 0;
 };
 
 }  // namespace mediapipe
