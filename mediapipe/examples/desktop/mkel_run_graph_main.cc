@@ -51,13 +51,22 @@ V get_with_default(const std::unordered_map<K, V>& map, const K& key,
   return default_value;  // Key does not exist, return the default value
 }
 
-void writeImagesToDisk(std::filesystem::path basePath, int index,
-                       const cv::Mat& baseImage, const cv::Mat& overlayImage) {
-  // Generate filenames with index
+void writeImagesToDisk(std::filesystem::path basePath, const cv::Mat& baseImage,
+                       const cv::Mat& overlayImage) {
+  // Get current time
+  auto now = std::chrono::system_clock::now();
+  auto time_t_now = std::chrono::system_clock::to_time_t(now);
+
+  // Format timestamp
+  std::stringstream timestamp;
+  std::tm* tm = std::localtime(&time_t_now);
+  timestamp << std::put_time(tm, "%Y%m%d_%H%M%S");
+
+  // Generate filenames with timestamp
   std::filesystem::path regular_filename =
-      basePath / (std::to_string(index) + ".jpg");
+      basePath / (timestamp.str() + ".jpg");
   std::filesystem::path overlay_filename =
-      basePath / ("overlay_" + std::to_string(index) + ".jpg");
+      basePath / ("overlay_" + timestamp.str() + ".jpg");
 
   // Write images
   cv::imwrite(regular_filename.string(), baseImage);
@@ -196,7 +205,7 @@ absl::Status RunMPPGraph() {
             cv::cvtColor(camera_frame, camera_frame, cv::COLOR_BGR2RGB);
             writeImagesToDisk(
                 std::filesystem::path(kDataCollectionDir) / collection_name,
-                frame_count++, camera_frame, output_frame_mat);
+                camera_frame, output_frame_mat);
           }
         }
       }
