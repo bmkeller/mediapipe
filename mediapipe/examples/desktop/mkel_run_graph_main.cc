@@ -41,38 +41,6 @@ ABSL_FLAG(std::string, output_video_path, "",
 
 ABSL_FLAG(std::string, video_source, "webcam", "'webcam', 'lux', 'video.mp4'");
 
-template <typename K, typename V>
-V get_with_default(const std::unordered_map<K, V>& map, const K& key,
-                   const V& default_value) {
-  auto it = map.find(key);
-  if (it != map.end()) {
-    return it->second;  // Key exists, return the value
-  }
-  return default_value;  // Key does not exist, return the default value
-}
-
-void writeImagesToDisk(std::filesystem::path basePath, const cv::Mat& baseImage,
-                       const cv::Mat& overlayImage) {
-  // Get current time
-  auto now = std::chrono::system_clock::now();
-  auto time_t_now = std::chrono::system_clock::to_time_t(now);
-
-  // Format timestamp
-  std::stringstream timestamp;
-  std::tm* tm = std::localtime(&time_t_now);
-  timestamp << std::put_time(tm, "%Y%m%d_%H%M%S");
-
-  // Generate filenames with timestamp
-  std::filesystem::path regular_filename =
-      basePath / (timestamp.str() + ".jpg");
-  std::filesystem::path overlay_filename =
-      basePath / ("overlay_" + timestamp.str() + ".jpg");
-
-  // Write images
-  cv::imwrite(regular_filename.string(), baseImage);
-  cv::imwrite(overlay_filename.string(), overlayImage);
-}
-
 absl::Status RunMPPGraph() {
   std::string calculator_graph_config_contents;
   MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
