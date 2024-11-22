@@ -61,8 +61,16 @@ cc_library(
 
 cc_library(
     name="gesture_detector_calculator",
-    srcs=["gesture_detector_calculator.cc", "proto_writer.cc"],
-    hdrs=["gesture_detector_calculator.h", "proto_writer.h"],
+    srcs=[
+        "gesture_detector_calculator.cc",
+        "proto_writer.cc",
+        "gesture_detector.cc",
+    ],
+    hdrs=[
+        "gesture_detector_calculator.h",
+        "proto_writer.h",
+        "gesture_detector.h",
+    ],
     deps=[
         ":types",
         ":gestures_cc_proto",
