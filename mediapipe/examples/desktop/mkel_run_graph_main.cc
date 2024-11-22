@@ -1,7 +1,9 @@
 #include <chrono>
 #include <cstdlib>
+#include <filesystem>
 #include <iomanip>
 #include <memory>
+#include <unordered_map>
 
 #include "StreamFactory.h"
 #include "absl/flags/flag.h"
@@ -25,6 +27,8 @@ constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
 constexpr char kWindowName[] = "MediaPipe";
 constexpr int kFpsWindowSize = 30;  // Calculate FPS over 30 frames
+constexpr char kDataCollectionDir[] =
+    "/Users/michaelkeller/data_collection/hand_poses/";
 
 ABSL_FLAG(std::string, calculator_graph_config_file, "",
           "Name of file containing text format CalculatorGraphConfig proto.");
@@ -36,6 +40,29 @@ ABSL_FLAG(std::string, output_video_path, "",
           "If not provided, show result in a window.");
 
 ABSL_FLAG(std::string, video_source, "webcam", "'webcam', 'lux', 'video.mp4'");
+
+template <typename K, typename V>
+V get_with_default(const std::unordered_map<K, V>& map, const K& key,
+                   const V& default_value) {
+  auto it = map.find(key);
+  if (it != map.end()) {
+    return it->second;  // Key exists, return the value
+  }
+  return default_value;  // Key does not exist, return the default value
+}
+
+void writeImagesToDisk(std::filesystem::path basePath, int index,
+                       const cv::Mat& baseImage, const cv::Mat& overlayImage) {
+  // Generate filenames with index
+  std::filesystem::path regular_filename =
+      basePath / (std::to_string(index) + ".jpg");
+  std::filesystem::path overlay_filename =
+      basePath / ("overlay_" + std::to_string(index) + ".jpg");
+
+  // Write images
+  cv::imwrite(regular_filename.string(), baseImage);
+  cv::imwrite(overlay_filename.string(), overlayImage);
+}
 
 absl::Status RunMPPGraph() {
   std::string calculator_graph_config_contents;
@@ -51,6 +78,17 @@ absl::Status RunMPPGraph() {
   ABSL_LOG(INFO) << "Initialize the calculator graph.";
   mediapipe::CalculatorGraph graph;
   MP_RETURN_IF_ERROR(graph.Initialize(config));
+
+  const std::unordered_map<char, std::string> collection_mappings = {
+      {'1', "index_point"}, {'2', "thumbs_up"}, {'3', "fist"}};
+
+  for (const auto& [_, value] : collection_mappings) {
+    std::filesystem::path p = kDataCollectionDir;
+    p /= value;
+    if (!std::filesystem::exists(p)) {
+      std::filesystem::create_directories(p);
+    }
+  }
 
   const std::string videoSource = absl::GetFlag(FLAGS_video_source);
   cv::VideoCapture capture;
@@ -145,9 +183,23 @@ absl::Status RunMPPGraph() {
       writer.write(output_frame_mat);
     } else {
       cv::imshow(kWindowName, output_frame_mat);
-      // Press any key to exit.
       const int pressed_key = cv::waitKey(5);
-      if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;
+
+      if (pressed_key >= 0 && pressed_key != 255) {
+        const char c = static_cast<char>(pressed_key);
+        if (c == 'q') {
+          grab_frames = false;
+        } else {
+          const std::string collection_name =
+              get_with_default<char, std::string>(collection_mappings, c, "");
+          if (!collection_name.empty()) {
+            cv::cvtColor(camera_frame, camera_frame, cv::COLOR_BGR2RGB);
+            writeImagesToDisk(
+                std::filesystem::path(kDataCollectionDir) / collection_name,
+                frame_count++, camera_frame, output_frame_mat);
+          }
+        }
+      }
     }
   }
 
