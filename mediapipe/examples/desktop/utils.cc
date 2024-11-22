@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include "mediapipe/framework/port/opencv_highgui_inc.h"
+
 cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
                            int height) {
   const auto start_time = std::chrono::high_resolution_clock::now();
@@ -62,4 +64,26 @@ double FPSCounter::getFPS() const { return fps_; }
 void FPSCounter::display() const {
   std::cout << "[" << frame_count_ << "] FPS: " << std::fixed
             << std::setprecision(1) << fps_ << " Hz" << std::endl;
+}
+
+void writeImagesToDisk(std::filesystem::path basePath, const cv::Mat& baseImage,
+                       const cv::Mat& overlayImage) {
+  // Get current time
+  auto now = std::chrono::system_clock::now();
+  auto time_t_now = std::chrono::system_clock::to_time_t(now);
+
+  // Format timestamp
+  std::stringstream timestamp;
+  std::tm* tm = std::localtime(&time_t_now);
+  timestamp << std::put_time(tm, "%Y%m%d_%H%M%S");
+
+  // Generate filenames with timestamp
+  std::filesystem::path regular_filename =
+      basePath / (timestamp.str() + ".jpg");
+  std::filesystem::path overlay_filename =
+      basePath / ("overlay_" + timestamp.str() + ".jpg");
+
+  // Write images
+  cv::imwrite(regular_filename.string(), baseImage);
+  cv::imwrite(overlay_filename.string(), overlayImage);
 }
