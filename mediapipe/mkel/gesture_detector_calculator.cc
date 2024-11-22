@@ -12,6 +12,9 @@ constexpr char kImageTag[] = "IMAGE";
 constexpr char kHandednessTag[] = "HANDEDNESS";
 constexpr float kTouchDistanceThreshold = 0.10f;
 
+constexpr char kProtoPath[] = "/tmp/proto_ipc";
+constexpr int kMaxMessagesToKeep = 20;
+
 enum class GestureTypes {
   UNKNOWN,
   CLICK,
@@ -107,14 +110,24 @@ absl::Status GestureRecognizerCalculator::GetContract(CalculatorContract *cc) {
 
 absl::Status GestureRecognizerCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
+  proto_writer_.Initialize(kProtoPath, kMaxMessagesToKeep);
+  frame_index_ = 0;
   return absl::OkStatus();
 }
 
 absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
+  frame_index_++;
+
   if (cc->Inputs().Tag(kMultiNormLandmarksTag).IsEmpty()) {
     std::cout << "MKEL: No hands found" << std::endl;
     return absl::OkStatus();
   }
+
+  gesture_.set_index(frame_index_);
+  gesture_.set_frame_index(frame_index_);
+  gesture_.set_center_x(0.0f);
+  gesture_.set_center_y(0.0f);
+  gesture_.set_gesture_type(gestures::GestureType::NONE);
 
   // RET_CHECK(!cc->Inputs().Tag(kImageSizeTag).IsEmpty());
 
@@ -153,6 +166,8 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
 
   std::cout << "Distance: " << touchDistance
             << ", touch detected: " << touchDetected << std::endl;
+
+  proto_writer_.Write(gesture_.SerializeAsString());
 
   return absl::OkStatus();
 }

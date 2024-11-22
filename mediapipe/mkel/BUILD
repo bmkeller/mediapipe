@@ -21,6 +21,9 @@ load(
     "mediapipe_simple_subgraph",
 )
 
+# load("@rules_proto_grpc//grpc:defs.bzl", "cc_grpc_library")
+load("@rules_proto_grpc//cpp:defs.bzl", "cc_grpc_library")
+
 package(default_visibility=["//visibility:public"])
 
 selects.config_setting_group(
@@ -29,6 +32,24 @@ selects.config_setting_group(
         "//mediapipe/gpu:disable_gpu",
         "//mediapipe:apple",
     ],
+)
+
+mediapipe_proto_library(
+    name="gestures_proto",
+    srcs=["gestures.proto"],
+    deps=[
+    ],
+)
+
+cc_grpc_library(
+    name="gestures_grpc",
+    srcs=["gesture_server.cc"],
+    # Set to True if you only want gRPC (no protobuf messages)
+    grpc_only=False,
+    deps=[
+        # "@com_github_grpc_grpc//:grpc++",
+    ],
+    protos=["gestures.proto"],
 )
 
 cc_library(
@@ -40,10 +61,11 @@ cc_library(
 
 cc_library(
     name="gesture_detector_calculator",
-    srcs=["gesture_detector_calculator.cc"],
-    hdrs=["gesture_detector_calculator.h"],
+    srcs=["gesture_detector_calculator.cc", "proto_writer.cc"],
+    hdrs=["gesture_detector_calculator.h", "proto_writer.h"],
     deps=[
         ":types",
+        ":gestures_cc_proto",
         "//mediapipe/framework:calculator_framework",
         "//mediapipe/framework/api2:node",
         "//mediapipe/framework/port:logging",
