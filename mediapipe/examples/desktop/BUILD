@@ -82,6 +82,7 @@ cc_library(
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:absl_log",
         "@luxonis_depthai//:luxonis_depthai",
+        "@com_github_nlohmann_json//:json",
         "//mediapipe/framework/formats:landmark_cc_proto",
     ],
 )

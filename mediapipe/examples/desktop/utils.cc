@@ -1,9 +1,11 @@
 #include "mediapipe/examples/desktop/utils.h"
 
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 
 #include "mediapipe/framework/port/opencv_highgui_inc.h"
+#include "nlohmann/json.hpp"  // from @com_github_nlohmann_json
 
 cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
                            int height) {
@@ -66,8 +68,40 @@ void FPSCounter::display() const {
             << std::setprecision(1) << fps_ << " Hz" << std::endl;
 }
 
-void writeImagesToDisk(std::filesystem::path basePath, const cv::Mat& baseImage,
-                       const cv::Mat& overlayImage) {
+std::string convertLandmarksToJson(
+    const std::vector<mediapipe::NormalizedLandmarkList>& landmarks) {
+  nlohmann::json json_landmarks;
+  json_landmarks["num_hands"] = landmarks.size();
+  json_landmarks["hands"] = nlohmann::json::array();
+
+  for (size_t hand_idx = 0; hand_idx < landmarks.size(); ++hand_idx) {
+    nlohmann::json hand;
+    hand["hand_index"] = hand_idx;
+    hand["landmarks"] = nlohmann::json::array();
+
+    const auto& landmark_list = landmarks[hand_idx];
+    for (int i = 0; i < landmark_list.landmark_size(); ++i) {
+      const auto& landmark = landmark_list.landmark(i);
+      nlohmann::json point = {
+          {"x", landmark.x()},
+          {"y", landmark.y()},
+          {"z", landmark.z()},
+          {"visibility",
+           landmark.has_visibility() ? landmark.visibility() : 0.0},
+          {"presence", landmark.has_presence() ? landmark.presence() : 0.0}};
+      hand["landmarks"].push_back(point);
+    }
+
+    json_landmarks["hands"].push_back(hand);
+  }
+
+  return json_landmarks.dump(2);
+}
+
+void writeResultsToDisk(
+    std::filesystem::path basePath, const cv::Mat& baseImage,
+    const cv::Mat& overlayImage,
+    const std::vector<mediapipe::NormalizedLandmarkList>& landmarks) {
   // Get current time
   auto now = std::chrono::system_clock::now();
   auto time_t_now = std::chrono::system_clock::to_time_t(now);
@@ -86,4 +120,15 @@ void writeImagesToDisk(std::filesystem::path basePath, const cv::Mat& baseImage,
   // Write images
   cv::imwrite(regular_filename.string(), baseImage);
   cv::imwrite(overlay_filename.string(), overlayImage);
+
+  std::filesystem::path landmarks_filename =
+      basePath / ("landmarks_" + timestamp.str() + ".json");
+
+  // Write out landmarks
+  std::ofstream landmarks_file(landmarks_filename.string());
+  landmarks_file << convertLandmarksToJson(landmarks);
+
+  std::cout << "Wrote landmarks to " << landmarks_filename.string()
+            << std::endl;
+  landmarks_file.close();
 }

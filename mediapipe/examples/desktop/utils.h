@@ -4,13 +4,16 @@
 #include <filesystem>
 #include <vector>
 
+#include "mediapipe/framework/formats/landmark.pb.h"
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
 
 cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
                            int height);
 
-void writeImagesToDisk(std::filesystem::path basePath, const cv::Mat& baseImage,
-                       const cv::Mat& overlayImage);
+void writeResultsToDisk(
+    std::filesystem::path basePath, const cv::Mat& baseImage,
+    const cv::Mat& overlayImage,
+    const std::vector<mediapipe::NormalizedLandmarkList>& landmarks);
 
 class FPSCounter {
  public:
