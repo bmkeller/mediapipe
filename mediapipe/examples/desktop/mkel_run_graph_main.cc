@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "StreamFactory.h"
 #include "absl/flags/flag.h"
@@ -13,6 +14,7 @@
 #include "mediapipe/framework/calculator_framework.h"
 #include "mediapipe/framework/formats/image_frame.h"
 #include "mediapipe/framework/formats/image_frame_opencv.h"
+#include "mediapipe/framework/formats/landmark.pb.h"
 #include "mediapipe/framework/port/file_helpers.h"
 #include "mediapipe/framework/port/opencv_highgui_inc.h"
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
@@ -25,10 +27,13 @@
 
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
+constexpr char kLandmarksStream[] = "landmarks";
 constexpr char kWindowName[] = "MediaPipe";
 constexpr int kFpsWindowSize = 30;  // Calculate FPS over 30 frames
 constexpr char kDataCollectionDir[] =
     "/Users/michaelkeller/data_collection/hand_poses/";
+constexpr int kWindowWidth = 1024;
+constexpr int kWindowHeight = 768;
 
 ABSL_FLAG(std::string, calculator_graph_config_file, "",
           "Name of file containing text format CalculatorGraphConfig proto.");
@@ -95,14 +100,17 @@ absl::Status RunMPPGraph() {
 
     std::cout << "OpenCV version: " << CV_VERSION << std::endl;
 
-    capture.set(cv::CAP_PROP_FRAME_WIDTH, 1024);
-    capture.set(cv::CAP_PROP_FRAME_HEIGHT, 768);
+    capture.set(cv::CAP_PROP_FRAME_WIDTH, kWindowWidth);
+    capture.set(cv::CAP_PROP_FRAME_HEIGHT, kWindowHeight);
     capture.set(cv::CAP_PROP_FPS, 30);
   }
 
   ABSL_LOG(INFO) << "Start running the calculator graph.";
-  MP_ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller,
+  MP_ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller image_poller,
                       graph.AddOutputStreamPoller(kOutputStream));
+  MP_ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller multi_norm_landmarks_poller,
+                      graph.AddOutputStreamPoller("multi_hand_landmarks"));
+
   MP_RETURN_IF_ERROR(graph.StartRun({}));
 
   ABSL_LOG(INFO) << "Start grabbing and processing frames.";
@@ -142,9 +150,21 @@ absl::Status RunMPPGraph() {
                           .At(mediapipe::Timestamp(frame_timestamp_us))));
 
     // Get the graph result packet, or stop if that fails.
-    mediapipe::Packet packet;
-    if (!poller.Next(&packet)) break;
-    auto& output_frame = packet.Get<mediapipe::ImageFrame>();
+    mediapipe::Packet image_packet;
+    std::cout << "Getting image packet" << std::endl;
+    if (!image_poller.Next(&image_packet)) break;
+    auto& output_frame = image_packet.Get<mediapipe::ImageFrame>();
+
+    std::cout << "Getting multi norm landmarks packet" << std::endl;
+    mediapipe::Packet multi_norm_landmarks_packet;
+    if (!multi_norm_landmarks_poller.Next(&multi_norm_landmarks_packet)) {
+      ABSL_LOG(ERROR) << "Failed to get multi norm landmarks packet";
+    }
+    auto multi_norm_landmarks =
+        multi_norm_landmarks_packet
+            .Get<std::vector<mediapipe::NormalizedLandmarkList>>();
+    std::cout << "Multi norm landmarks: " << multi_norm_landmarks.size()
+              << std::endl;
 
     // Convert back to opencv for display or saving.
     cv::Mat output_frame_mat = mediapipe::formats::MatView(&output_frame);

@@ -27,6 +27,9 @@ input_stream: "DETECTIONS:palm_detections"
 # Updated CPU image. (ImageFrame)
 output_stream: "IMAGE:output_image"
 
+# Multi normalized landmarks. (std::vector<NormalizedLandmarkList>)
+output_stream: "MULTI_NORM_LANDMARKS:output_multi_hand_landmarks"
+
 # Converts detections to drawing primitives for annotation overlay.
 node {
   calculator: "GestureRecognizerCalculator"
@@ -34,5 +37,5 @@ node {
   input_stream: "IMAGE:input_image"
   input_stream: "HANDEDNESS:multi_handedness"
 
-  #output_stream: "RENDER_DATA:detection_render_data"
+  output_stream: "MULTI_NORM_LANDMARKS:output_multi_hand_landmarks"
 }
