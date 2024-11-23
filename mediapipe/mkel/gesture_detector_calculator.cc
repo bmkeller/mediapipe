@@ -42,7 +42,7 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
   frame_index_++;
 
   if (cc->Inputs().Tag(kMultiNormLandmarksTag).IsEmpty()) {
-    std::cout << "MKEL: No hands found" << std::endl;
+    // std::cout << "MKEL: No hands found" << std::endl;
 
     cc->Outputs()
         .Tag(kMultiNormLandmarksTag)
