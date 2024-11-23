@@ -151,11 +151,9 @@ absl::Status RunMPPGraph() {
 
     // Get the graph result packet, or stop if that fails.
     mediapipe::Packet image_packet;
-    std::cout << "Getting image packet" << std::endl;
     if (!image_poller.Next(&image_packet)) break;
     auto& output_frame = image_packet.Get<mediapipe::ImageFrame>();
 
-    std::cout << "Getting multi norm landmarks packet" << std::endl;
     mediapipe::Packet multi_norm_landmarks_packet;
     if (!multi_norm_landmarks_poller.Next(&multi_norm_landmarks_packet)) {
       ABSL_LOG(ERROR) << "Failed to get multi norm landmarks packet";
@@ -163,8 +161,8 @@ absl::Status RunMPPGraph() {
     auto multi_norm_landmarks =
         multi_norm_landmarks_packet
             .Get<std::vector<mediapipe::NormalizedLandmarkList>>();
-    std::cout << "Multi norm landmarks: " << multi_norm_landmarks.size()
-              << std::endl;
+    // std::cout << "Multi norm landmarks: " << multi_norm_landmarks.size()
+    //           << std::endl;
 
     // Convert back to opencv for display or saving.
     cv::Mat output_frame_mat = mediapipe::formats::MatView(&output_frame);
@@ -184,16 +182,16 @@ absl::Status RunMPPGraph() {
 
       if (pressed_key >= 0 && pressed_key != 255) {
         const char c = static_cast<char>(pressed_key);
-        if (c == 'q') {
+        if (c == 'q' || c == 'Q') {
           grab_frames = false;
         } else {
           const std::string collection_name =
               get_with_default<char, std::string>(collection_mappings, c, "");
           if (!collection_name.empty()) {
             cv::cvtColor(camera_frame, camera_frame, cv::COLOR_BGR2RGB);
-            writeImagesToDisk(
+            writeResultsToDisk(
                 std::filesystem::path(kDataCollectionDir) / collection_name,
-                camera_frame, output_frame_mat);
+                camera_frame, output_frame_mat, multi_norm_landmarks);
           }
         }
       }
