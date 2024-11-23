@@ -23,6 +23,11 @@ absl::Status GestureRecognizerCalculator::GetContract(CalculatorContract *cc) {
       .Set<std::vector<NormalizedLandmarkList>>();
   cc->Inputs().Tag(kImageTag).Set<ImageFrame>();
   cc->Inputs().Tag(kHandednessTag).Set<std::vector<ClassificationList>>();
+
+  cc->Outputs()
+      .Tag(kMultiNormLandmarksTag)
+      .Set<std::vector<NormalizedLandmarkList>>();
+
   return absl::OkStatus();
 }
 
@@ -38,6 +43,12 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
 
   if (cc->Inputs().Tag(kMultiNormLandmarksTag).IsEmpty()) {
     std::cout << "MKEL: No hands found" << std::endl;
+
+    cc->Outputs()
+        .Tag(kMultiNormLandmarksTag)
+        .AddPacket(mediapipe::Adopt(new std::vector<NormalizedLandmarkList>())
+                       .At(cc->InputTimestamp()));
+
     return absl::OkStatus();
   }
 
@@ -55,6 +66,12 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
   const auto landmarks = cc->Inputs()
                              .Tag(kMultiNormLandmarksTag)
                              .Get<std::vector<NormalizedLandmarkList>>();
+
+  cc->Outputs()
+      .Tag(kMultiNormLandmarksTag)
+      .AddPacket(
+          mediapipe::Adopt(new std::vector<NormalizedLandmarkList>(landmarks))
+              .At(cc->InputTimestamp()));
 
   std::cout << "Found " << landmarks.size() << " hands" << std::endl;
 
@@ -84,8 +101,6 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
 
   // std::cout << "Distance: " << touchDistance
   //           << ", touch detected: " << touchDetected << std::endl;
-
-  // gesture_.set_blah("this is a long test string");
 
   gesture_detection::HandPositions handResult =
       gesture_detector_.updateLeftHand(landmarks[0]);
