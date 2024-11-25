@@ -26,6 +26,7 @@ input_stream: "DETECTIONS:palm_detections"
 
 # Updated CPU image. (ImageFrame)
 output_stream: "IMAGE:output_image"
+output_stream: "PREDICTED_GESTURE:predicted_gesture"
 
 # Multi normalized landmarks. (std::vector<NormalizedLandmarkList>)
 output_stream: "MULTI_NORM_LANDMARKS:output_multi_hand_landmarks"
@@ -38,4 +39,5 @@ node {
   input_stream: "HANDEDNESS:multi_handedness"
 
   output_stream: "MULTI_NORM_LANDMARKS:output_multi_hand_landmarks"
+  output_stream: "PREDICTED_GESTURE:predicted_gesture"
 }

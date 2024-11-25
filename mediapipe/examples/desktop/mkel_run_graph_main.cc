@@ -66,6 +66,11 @@ absl::Status RunMPPGraph() {
       {'1', "index_point"}, {'2', "thumbs_up"}, {'3', "fist"},
       {'4', "palm"},        {'5', "ok"},        {'6', "wolf"}};
 
+  std::unordered_map<int, std::string> gesture_mappings;
+  for (const auto& [key, value] : collection_mappings) {
+    gesture_mappings[key - '1'] = value;
+  }
+
   for (const auto& [_, value] : collection_mappings) {
     std::filesystem::path p = kDataCollectionDir;
     p /= value;
@@ -98,7 +103,8 @@ absl::Status RunMPPGraph() {
   cv::VideoWriter writer;
   const bool save_video = !absl::GetFlag(FLAGS_output_video_path).empty();
   if (!save_video) {
-    cv::namedWindow(kWindowName, /*flags=WINDOW_AUTOSIZE*/ 1);
+    const int window_flags = cv::WINDOW_AUTOSIZE;
+    cv::namedWindow(kWindowName, window_flags);
 
     std::cout << "OpenCV version: " << CV_VERSION << std::endl;
 
@@ -112,6 +118,8 @@ absl::Status RunMPPGraph() {
                       graph.AddOutputStreamPoller(kOutputStream));
   MP_ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller multi_norm_landmarks_poller,
                       graph.AddOutputStreamPoller("multi_hand_landmarks"));
+  MP_ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller predicted_gesture_poller,
+                      graph.AddOutputStreamPoller("predicted_gesture"));
 
   MP_RETURN_IF_ERROR(graph.StartRun({}));
 
@@ -163,14 +171,22 @@ absl::Status RunMPPGraph() {
     auto multi_norm_landmarks =
         multi_norm_landmarks_packet
             .Get<std::vector<mediapipe::NormalizedLandmarkList>>();
-    // std::cout << "Multi norm landmarks: " << multi_norm_landmarks.size()
-    //           << std::endl;
+
+    mediapipe::Packet predicted_gesture_packet;
+    if (!predicted_gesture_poller.Next(&predicted_gesture_packet)) {
+      ABSL_LOG(ERROR) << "Failed to get predicted gesture packet";
+    }
+    int predicted_gesture = predicted_gesture_packet.Get<int>();
+    std::string gesture_name = get_with_default<int, std::string>(
+        gesture_mappings, predicted_gesture, "(unknown)");
+
+    gesture_name += "_" + std::to_string(predicted_gesture);
 
     // Convert back to opencv for display or saving.
     cv::Mat output_frame_mat = mediapipe::formats::MatView(&output_frame);
     cv::cvtColor(output_frame_mat, output_frame_mat, cv::COLOR_RGB2BGR);
 
-    mkel::drawDetectedGesture(output_frame_mat, "(unknown)");
+    mkel::drawDetectedGesture(output_frame_mat, gesture_name);
 
     if (save_video) {
       if (!writer.isOpened()) {
