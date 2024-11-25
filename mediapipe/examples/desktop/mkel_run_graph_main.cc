@@ -62,7 +62,8 @@ absl::Status RunMPPGraph() {
   MP_RETURN_IF_ERROR(graph.Initialize(config));
 
   const std::unordered_map<char, std::string> collection_mappings = {
-      {'1', "index_point"}, {'2', "thumbs_up"}, {'3', "fist"}};
+      {'1', "index_point"}, {'2', "thumbs_up"}, {'3', "fist"},
+      {'4', "palm"},        {'5', "ok"},        {'6', "wolf"}};
 
   for (const auto& [_, value] : collection_mappings) {
     std::filesystem::path p = kDataCollectionDir;
