@@ -5,6 +5,10 @@
 
 #include "mediapipe/framework/formats/landmark.pb.h"
 #include "mediapipe/mkel/hand_landmarks.h"
+#include "tensorflow/lite/interpreter.h"
+#include "tensorflow/lite/kernels/register.h"
+#include "tensorflow/lite/model.h"
+#include "tensorflow/lite/model_builder.h"
 
 namespace mediapipe {
 namespace gesture_detection {
@@ -53,14 +57,24 @@ class GestureDetector {
   const HandState &leftHand() const { return leftHand_; }
   const HandState &rightHand() const { return rightHand_; }
 
+  std::optional<int> performInference(const NormalizedLandmarkList &landmarks);
+
  private:
   void updateHand(HandState &hand, const NormalizedLandmarkList &landmarks);
+  void loadTfliteModel();
 
   HandState leftHand_;
   HandState rightHand_;
 
   bool isFist(const HandState &hand);
   std::optional<float> isIndexPoint(const HandState &hand);
+
+  // Model stuff
+  std::unique_ptr<tflite::Interpreter> interpreter_;
+  std::unique_ptr<tflite::FlatBufferModel> model_;
+  int input_batch_size_ = -1;
+  int input_landmarks_ = -1;
+  int output_classes_ = -1;
 };
 
 }  // namespace gesture_detection
