@@ -10,6 +10,7 @@ namespace {
 constexpr char kMultiNormLandmarksTag[] = "MULTI_NORM_LANDMARKS";
 constexpr char kImageTag[] = "IMAGE";
 constexpr char kHandednessTag[] = "HANDEDNESS";
+constexpr char kPredictedGestureTag[] = "PREDICTED_GESTURE";
 constexpr float kTouchDistanceThreshold = 0.10f;
 
 constexpr char kProtoPath[] = "/tmp/proto_ipc";
@@ -27,6 +28,7 @@ absl::Status GestureRecognizerCalculator::GetContract(CalculatorContract *cc) {
   cc->Outputs()
       .Tag(kMultiNormLandmarksTag)
       .Set<std::vector<NormalizedLandmarkList>>();
+  cc->Outputs().Tag(kPredictedGestureTag).Set<int>();
 
   return absl::OkStatus();
 }
@@ -48,6 +50,10 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
         .Tag(kMultiNormLandmarksTag)
         .AddPacket(mediapipe::Adopt(new std::vector<NormalizedLandmarkList>())
                        .At(cc->InputTimestamp()));
+
+    cc->Outputs()
+        .Tag(kPredictedGestureTag)
+        .AddPacket(mediapipe::Adopt(new int(-1)).At(cc->InputTimestamp()));
 
     return absl::OkStatus();
   }
@@ -108,6 +114,15 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
   std::string serialized_gesture = gesture_.SerializeAsString();
   // std::cout << "Serialized gesture: " << serialized_gesture.size() <<
   // std::endl;
+
+  auto predicted_gesture = gesture_detector_.performInference(landmarks[0]);
+
+  if (predicted_gesture) {
+    cc->Outputs()
+        .Tag(kPredictedGestureTag)
+        .AddPacket(mediapipe::Adopt(new int(predicted_gesture.value()))
+                       .At(cc->InputTimestamp()));
+  }
 
   proto_writer_.Write(serialized_gesture);
 

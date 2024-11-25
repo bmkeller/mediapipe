@@ -81,6 +81,12 @@ cc_library(
         "//mediapipe/framework/formats:landmark_cc_proto",
         "//mediapipe/framework/formats:image",
         "//mediapipe/framework/formats:classification_cc_proto",
+        "//mediapipe/util/tflite:config",
+        "//mediapipe/util/tflite:tflite_model_loader",
+        "@org_tensorflow//tensorflow/lite:framework",
+        "@org_tensorflow//tensorflow/lite/kernels:builtin_ops",
+        # "@org_tensorflow//tensorflow/lite:ops",
+        # "@org_tensorflow//tensorflow/lite:kernels",
     ],
     alwayslink=1,
 )

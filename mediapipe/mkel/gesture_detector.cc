@@ -1,5 +1,6 @@
 #include "mediapipe/mkel/gesture_detector.h"
 
+#include <filesystem>
 #include <limits>
 #include <sstream>
 #include <unordered_map>
@@ -7,6 +8,9 @@
 namespace mediapipe {
 namespace gesture_detection {
 namespace {
+
+constexpr char kModelPath[] =
+    "/Users/michaelkeller/Documents/code/notebook/output/model.tflite";
 
 TimePoint now() { return std::chrono::system_clock::now(); }
 
@@ -142,6 +146,8 @@ struct HandState {
 GestureDetector::GestureDetector() {
   leftHand_.hand = kLeft;
   rightHand_.hand = kRight;
+
+  loadTfliteModel();
 }
 
 // GestureTypes GetGestureType(const HandState &hand_state) {
@@ -234,6 +240,124 @@ HandPositions GestureDetector::updateRightHand(
     const NormalizedLandmarkList &landmarks) {
   updateHand(rightHand_, landmarks);
   return rightHand_.hand_position;
+}
+
+void GestureDetector::loadTfliteModel() {
+  // Load model
+  // Check if the file exists
+  if (!std::filesystem::exists(kModelPath)) {
+    throw std::runtime_error("TFLite model file does not exist: " +
+                             std::string(kModelPath));
+  }
+
+  model_ = tflite::FlatBufferModel::BuildFromFile(kModelPath);
+
+  if (!model_) {
+    throw std::runtime_error("Failed to load TFLite model from: " +
+                             std::string(kModelPath));
+  }
+
+  // Build interpreter
+  tflite::ops::builtin::BuiltinOpResolver resolver;
+  tflite::InterpreterBuilder builder(*model_, resolver);
+
+  builder(&interpreter_);
+
+  if (!interpreter_) {
+    throw std::runtime_error("Failed to build TFLite interpreter");
+  }
+
+  // Allocate tensors
+  if (interpreter_->AllocateTensors() != kTfLiteOk) {
+    throw std::runtime_error("Failed to allocate tensors");
+  }
+
+  // Validate input tensor
+  if (interpreter_->inputs().size() != 1) {
+    throw std::runtime_error("Model must have exactly one input");
+  }
+
+  TfLiteTensor *input_tensor = interpreter_->input_tensor(0);
+  if (input_tensor->type != kTfLiteFloat32) {
+    throw std::runtime_error("Input tensor must be float32");
+  }
+
+  // Expected shape: [1, num_landmarks]
+  const int expected_dims = 2;
+  if (input_tensor->dims->size != expected_dims) {
+    throw std::runtime_error(
+        "Input tensor must have " + std::to_string(expected_dims) +
+        " dimensions, got: " + std::to_string(input_tensor->dims->size));
+  }
+
+  input_batch_size_ = input_tensor->dims->data[0];
+  input_landmarks_ = input_tensor->dims->data[1];
+
+  // Validate output tensor
+  if (interpreter_->outputs().size() != 1) {
+    throw std::runtime_error("Model must have exactly one output");
+  }
+
+  TfLiteTensor *output_tensor = interpreter_->output_tensor(0);
+  if (output_tensor->type != kTfLiteFloat32) {
+    throw std::runtime_error("Output tensor must be float32");
+  }
+
+  // Expected shape: [1, num_classes]
+  if (output_tensor->dims->size != 2) {
+    throw std::runtime_error("Output tensor must have 2 dimensions, got: " +
+                             std::to_string(output_tensor->dims->size));
+  }
+
+  output_classes_ = output_tensor->dims->data[1];
+
+  std::cout << "TFLite model loaded successfully:" << std::endl
+            << "  Input shape: [" << input_batch_size_ << ", "
+            << input_landmarks_ << ", " << "]" << std::endl
+            << "  Output classes: " << output_classes_ << std::endl;
+}
+
+std::optional<int> GestureDetector::performInference(
+    const NormalizedLandmarkList &landmarks) {
+  // Get input tensor pointer
+  float *input_data = interpreter_->typed_input_tensor<float>(0);
+
+  // Flatten landmarks into input tensor
+  // For each landmark, add x, y coordinates
+  for (int i = 0; i < landmarks.landmark_size() && i < input_landmarks_ / 2;
+       i++) {
+    const auto &landmark = landmarks.landmark(i);
+    input_data[i * 2] = landmark.x();
+    input_data[i * 2 + 1] = landmark.y();
+  }
+
+  // Run inference
+  if (interpreter_->Invoke() != kTfLiteOk) {
+    std::cerr << "Failed to invoke interpreter" << std::endl;
+    return std::nullopt;
+  }
+
+  // Get output tensor
+  float *output = interpreter_->typed_output_tensor<float>(0);
+
+  // Find class with highest probability
+  float max_prob = 0.0f;
+  int predicted_class = -1;
+
+  for (int i = 0; i < output_classes_; i++) {
+    if (output[i] > max_prob) {
+      max_prob = output[i];
+      predicted_class = i;
+    }
+  }
+
+  // Debug output
+  std::cout << "Predicted class: " << predicted_class
+            << " with probability: " << max_prob << std::endl;
+
+  if (max_prob < 0.3f) return -1;
+
+  return predicted_class;
 }
 
 }  // namespace gesture_detection
