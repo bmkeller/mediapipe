@@ -61,10 +61,12 @@ cc_library(
     srcs=[
         "mkel_run_graph_main.cc",
         "utils.cc",
+        "overlay.cc",
         "video_provider.cc",
     ],
     hdrs=[
         "utils.h",
+        "overlay.h",
         "video_provider.h",
     ],
     deps=[
