@@ -60,8 +60,8 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
 
   gesture_.set_index(123);
   gesture_.set_frame_index(frame_index_);
-  gesture_.set_center_x(2.0f);
-  gesture_.set_center_y(4.0f);
+  gesture_.set_index_finger_tip_x(-1.0f);
+  gesture_.set_index_finger_tip_y(-1.0f);
   gesture_.set_gesture_type(gestures::GestureType::NONE);
 
   // RET_CHECK(!cc->Inputs().Tag(kImageSizeTag).IsEmpty());
@@ -110,6 +110,19 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
 
   gesture_detection::HandPositions handResult =
       gesture_detector_.updateLeftHand(landmarks[0]);
+
+  const auto index_finger_tip = gesture_detector_.getIndexFingerTip();
+  gesture_.set_index_finger_tip_x(index_finger_tip.first);
+  gesture_.set_index_finger_tip_y(index_finger_tip.second);
+
+  const auto gesture = gesture_detector_.getGesture();
+  gesture_.set_gesture_index(gesture.first);
+
+  if (gesture.second == 8) {
+    gesture_.set_gesture_type(gestures::GestureType::TAP);
+  } else {
+    gesture_.set_gesture_type(gestures::GestureType::NONE);
+  }
 
   std::string serialized_gesture = gesture_.SerializeAsString();
   // std::cout << "Serialized gesture: " << serialized_gesture.size() <<

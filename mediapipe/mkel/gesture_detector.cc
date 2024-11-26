@@ -356,9 +356,23 @@ std::optional<int> GestureDetector::performInference(
   std::cout << "Predicted class: " << predicted_class
             << " with probability: " << max_prob << std::endl;
 
+  if (last_gesture_code_ != predicted_class) {
+    last_gesture_code_ = predicted_class;
+    last_gesture_counter_++;
+  }
+
   if (max_prob < 0.3f) return -1;
 
   return predicted_class;
+}
+
+std::pair<float, float> GestureDetector::getIndexFingerTip() const {
+  return {leftHand_.landmark_map.at(LandmarkType::INDEX_FINGER_TIP).x(),
+          leftHand_.landmark_map.at(LandmarkType::INDEX_FINGER_TIP).y()};
+}
+
+std::pair<int, int> GestureDetector::getGesture() const {
+  return {last_gesture_counter_, last_gesture_code_};
 }
 
 }  // namespace gesture_detection

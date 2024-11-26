@@ -24,9 +24,10 @@ message Gestures {
   string timestamp = 3;
 
   // The type of gesture
-  GestureType gesture_type = 4;
+  int32 gesture_index = 4;
+  GestureType gesture_type = 5;
 
-  // The person's name
-  float center_x = 5;
-  float center_y = 6;
+  // Index finger tip
+  float index_finger_tip_x = 6;
+  float index_finger_tip_y = 7;
 }
