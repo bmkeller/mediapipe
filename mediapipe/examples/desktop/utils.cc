@@ -98,10 +98,13 @@ std::string convertLandmarksToJson(
   return json_landmarks.dump(2);
 }
 
-void writeResultsToDisk(
+bool writeResultsToDisk(
     std::filesystem::path basePath, const cv::Mat& baseImage,
     const cv::Mat& overlayImage,
     const std::vector<mediapipe::NormalizedLandmarkList>& landmarks) {
+  if (landmarks.size() != 1) {
+    return false;
+  }
   // Get current time
   auto now = std::chrono::system_clock::now();
   auto time_t_now = std::chrono::system_clock::to_time_t(now);
