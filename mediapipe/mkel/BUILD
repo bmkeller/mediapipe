@@ -54,9 +54,11 @@ cc_grpc_library(
 
 cc_library(
     name="types",
-    srcs=[],
+    srcs=["hand_landmarks.cc"],
     hdrs=["hand_landmarks.h"],
-    deps=[],
+    deps=[
+        "//mediapipe/framework/formats:landmark_cc_proto",
+    ],
 )
 
 cc_library(

@@ -42,10 +42,9 @@ absl::Status GestureRecognizerCalculator::Open(CalculatorContext *cc) {
 
 absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
   frame_index_++;
+  gesture_.set_frame_index(frame_index_);
 
   if (cc->Inputs().Tag(kMultiNormLandmarksTag).IsEmpty()) {
-    // std::cout << "MKEL: No hands found" << std::endl;
-
     cc->Outputs()
         .Tag(kMultiNormLandmarksTag)
         .AddPacket(mediapipe::Adopt(new std::vector<NormalizedLandmarkList>())
@@ -58,16 +57,8 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
     return absl::OkStatus();
   }
 
-  gesture_.set_index(123);
-  gesture_.set_frame_index(frame_index_);
-  gesture_.set_index_finger_tip_x(-1.0f);
-  gesture_.set_index_finger_tip_y(-1.0f);
-  gesture_.set_gesture_type(gestures::GestureType::NONE);
-
-  // RET_CHECK(!cc->Inputs().Tag(kImageSizeTag).IsEmpty());
-
-  // std::pair<int, int> image_size =
-  //     cc->Inputs().Tag(kImageSizeTag).Get<std::pair<int, int>>();
+  gesture_.set_timestamp(absl::FormatTime(absl::Now()));
+  gesture_.set_hand_position(gestures::HandPositions::NONE);
 
   const auto landmarks = cc->Inputs()
                              .Tag(kMultiNormLandmarksTag)
@@ -85,48 +76,32 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
   std::cout << "Image size: " << image.Width() << "x" << image.Height()
             << std::endl;
 
-  // const auto &handedness =
-  //     cc->Inputs().Tag(kHandednessTag).Get<std::vector<ClassificationList>>();
-  // std::cout << "Handedness: " << handedness.size() << std::endl;
-  // std::cout << "Handedness: " << handedness[0].classification_size()
-  //           << std::endl;
-  // std::cout << "Handedness: " << handedness[0].classification(0).label()
-  //           << std::endl;
+  const auto landmark_map = generateLandmarkMap(landmarks[0]);
 
-  // HandState hand_state;
-  // hand_state.InitializeLandmarkMap(landmarks[0]);
+  auto pt = landmark_map.at(LandmarkType::INDEX_FINGER_TIP);
+  gesture_.mutable_index_finger_tip()->set_x(pt.x());
+  gesture_.mutable_index_finger_tip()->set_y(pt.y());
 
-  // const float touchDistance = hand_state.Distance(
-  //     LandmarkType::THUMB_TIP, LandmarkType::INDEX_FINGER_TIP, true);
+  pt = landmark_map.at(LandmarkType::THUMB_TIP);
+  gesture_.mutable_thumb_tip()->set_x(pt.x());
+  gesture_.mutable_thumb_tip()->set_y(pt.y());
 
-  // const bool touchDetected = touchDistance < kTouchDistanceThreshold;
+  pt = landmark_map.at(LandmarkType::WRIST);
+  gesture_.mutable_wrist()->set_x(pt.x());
+  gesture_.mutable_wrist()->set_y(pt.y());
 
-  // if (touchDetected) {
-  //   OnGestureDetected();
+  gesture_.set_hand_position(gesture_detector_.getHandPosition());
+  gesture_.set_hand_position_probability(
+      gesture_detector_.getHandPositionProbability());
+  gesture_.set_hand_position_index(gesture_detector_.getHandPositionCounter());
+
+  // if (gesture.second == 8) {
+  //   gesture_.set_gesture_type(gestures::GestureType::TAP);
+  // } else {
+  //   gesture_.set_gesture_type(gestures::GestureType::NONE);
   // }
 
-  // std::cout << "Distance: " << touchDistance
-  //           << ", touch detected: " << touchDetected << std::endl;
-
-  gesture_detection::HandPositions handResult =
-      gesture_detector_.updateLeftHand(landmarks[0]);
-
-  const auto index_finger_tip = gesture_detector_.getIndexFingerTip();
-  gesture_.set_index_finger_tip_x(index_finger_tip.first);
-  gesture_.set_index_finger_tip_y(index_finger_tip.second);
-
-  const auto gesture = gesture_detector_.getGesture();
-  gesture_.set_gesture_index(gesture.first);
-
-  if (gesture.second == 8) {
-    gesture_.set_gesture_type(gestures::GestureType::TAP);
-  } else {
-    gesture_.set_gesture_type(gestures::GestureType::NONE);
-  }
-
   std::string serialized_gesture = gesture_.SerializeAsString();
-  // std::cout << "Serialized gesture: " << serialized_gesture.size() <<
-  // std::endl;
 
   auto predicted_gesture = gesture_detector_.performInference(landmarks[0]);
 

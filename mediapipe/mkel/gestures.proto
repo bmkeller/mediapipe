@@ -6,28 +6,41 @@ syntax = "proto3";
 // Define the package name (optional, but recommended for avoiding conflicts)
 package gestures;
 
-enum GestureType {
-    NONE = 0;
-    TAP = 1;
-    ROTATE_LEFT = 2;
-    ROTATE_RIGHT = 3;
+enum HandPositions {
+  INDEX_POINT = 0;
+  THUMBS_UP = 1;
+  FIST = 2;
+  PALM = 3;
+  OK = 4;
+  WOLF = 5;
+  THREE_FINGER = 6;
+  NONE = 7;
+  TAP = 8;
+}
+
+message Point {
+  float x = 1;
+  float y = 2;
 }
 
 message Gestures {
-  // Current index for the detected gesture
-  int32 index = 1;
-
   // Sequential video frame index
-  int32 frame_index = 2;
+  int32 frame_index = 1;
 
   // Timestamp of the gesture
-  string timestamp = 3;
+  string timestamp = 2;
 
-  // The type of gesture
-  int32 gesture_index = 4;
-  GestureType gesture_type = 5;
+  // The current hand position
+  HandPositions hand_position = 3;
+
+  // The index of the hand position
+  int32 hand_position_index = 4;
+
+  // The probability of the hand position
+  float hand_position_probability = 5;
 
   // Index finger tip
-  float index_finger_tip_x = 6;
-  float index_finger_tip_y = 7;
+  Point index_finger_tip = 6;
+  Point thumb_tip = 7;
+  Point wrist = 8;
 }
