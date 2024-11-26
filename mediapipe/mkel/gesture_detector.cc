@@ -324,11 +324,12 @@ std::optional<int> GestureDetector::performInference(
 
   // Flatten landmarks into input tensor
   // For each landmark, add x, y coordinates
-  for (int i = 0; i < landmarks.landmark_size() && i < input_landmarks_ / 2;
+  for (int i = 0; i < landmarks.landmark_size() && i < input_landmarks_ / 3;
        i++) {
     const auto &landmark = landmarks.landmark(i);
-    input_data[i * 2] = landmark.x();
-    input_data[i * 2 + 1] = landmark.y();
+    input_data[i * 3] = landmark.x();
+    input_data[i * 3 + 1] = landmark.y();
+    input_data[i * 3 + 2] = landmark.z();
   }
 
   // Run inference
