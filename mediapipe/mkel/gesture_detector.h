@@ -21,6 +21,7 @@ enum class HandPositions {
   CLICK,
   INDEX_POINT,
   THUMB_POINT,
+  TAP,
 };
 
 struct BoundingBox {
@@ -59,6 +60,10 @@ class GestureDetector {
 
   std::optional<int> performInference(const NormalizedLandmarkList &landmarks);
 
+  std::pair<float, float> getIndexFingerTip() const;
+
+  std::pair<int, int> getGesture() const;
+
  private:
   void updateHand(HandState &hand, const NormalizedLandmarkList &landmarks);
   void loadTfliteModel();
@@ -75,6 +80,9 @@ class GestureDetector {
   int input_batch_size_ = -1;
   int input_landmarks_ = -1;
   int output_classes_ = -1;
+
+  int last_gesture_code_ = 0;
+  int last_gesture_counter_ = 0;
 };
 
 }  // namespace gesture_detection
