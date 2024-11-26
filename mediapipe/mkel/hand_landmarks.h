@@ -1,5 +1,9 @@
 #pragma once
 
+#include <unordered_map>
+
+#include "mediapipe/framework/formats/landmark.pb.h"
+
 // Defined here:
 // https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker
 
@@ -31,5 +35,9 @@ enum class LandmarkType : int {
 
 constexpr int kFirstLandmarkIndex = 0;
 constexpr int kLastLandmarkIndex = 20;
+
+using LandmarkMap = std::unordered_map<LandmarkType, NormalizedLandmark>;
+
+LandmarkMap generateLandmarkMap(const NormalizedLandmarkList &landmarks);
 
 }  // namespace mediapipe
