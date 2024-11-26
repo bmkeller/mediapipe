@@ -10,7 +10,7 @@
 cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
                            int height);
 
-void writeResultsToDisk(
+bool writeResultsToDisk(
     std::filesystem::path basePath, const cv::Mat& baseImage,
     const cv::Mat& overlayImage,
     const std::vector<mediapipe::NormalizedLandmarkList>& landmarks);
