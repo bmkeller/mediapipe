@@ -168,7 +168,9 @@ GLOG_logtostderr=1 bazel-bin/mediapipe/examples/desktop/hand_tracking/hand_track
 
 
 # Get upstream changes with:
+git fetch upstream
 git rebase upstream/master
+git push origin master --force
 
 # Push changes with:
 git push
