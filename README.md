@@ -161,16 +161,16 @@ the MediaPipe Stack Overflow with a `mediapipe` tag.
 
 
 # Build Instructions for Hand Tracking
-bazel build -c opt --define MEDIAPIPE_DISABLE_GPU=1 mediapipe/examples/desktop/hand_tracking:hand_tracking_cpu
+`bazel build -c opt --define MEDIAPIPE_DISABLE_GPU=1 mediapipe/examples/desktop/hand_tracking:hand_tracking_cpu`
 
 # Run with:
-GLOG_logtostderr=1 bazel-bin/mediapipe/examples/desktop/hand_tracking/hand_tracking_cpu  --calculator_graph_config_file=mediapipe/graphs/hand_tracking/hand_tracking_desktop_live.pbtxt
+`GLOG_logtostderr=1 bazel-bin/mediapipe/examples/desktop/hand_tracking/hand_tracking_cpu  --calculator_graph_config_file=mediapipe/graphs/hand_tracking/hand_tracking_desktop_live.pbtxt`
 
 
 # Get upstream changes with:
-git fetch upstream
-git rebase upstream/master
-git push origin master --force
+* `git fetch upstream`
+* `git rebase upstream/master`
+* `git push origin master --force`
 
 # Push changes with:
-git push
+`git push`
