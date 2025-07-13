@@ -35,7 +35,7 @@ exports_files(["LICENSE"])
 # "include/opencv4/opencv2/**/*.h*" and the include prefix needs to be set to
 # "include/opencv4".
 
-PREFIX = "opencv/4.10.0_12"
+PREFIX = "opencv/4.11.0_1"
 
 cc_library(
     name = "opencv",
