@@ -29,12 +29,14 @@
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
 constexpr char kLandmarksStream[] = "landmarks";
-constexpr char kWindowName[] = "MediaPipe";
+constexpr char kWindowName[] = "MKEL: MediaPipe";
 constexpr int kFpsWindowSize = 30;  // Calculate FPS over 30 frames
 constexpr char kDataCollectionDir[] =
     "/Users/michaelkeller/data_collection/hand_poses/";
-constexpr int kWindowWidth = 1024;
-constexpr int kWindowHeight = 768;
+constexpr int kWindowWidth = 1600;
+constexpr int kWindowHeight = 900;
+
+// int findCameras();
 
 ABSL_FLAG(std::string, calculator_graph_config_file, "",
           "Name of file containing text format CalculatorGraphConfig proto.");
@@ -86,7 +88,7 @@ absl::Status RunMPPGraph() {
   bool loadSuccess = false;
 
   if (videoSource == "lux") {
-    loadSuccess = videoProvider.LoadLuxonis("rgb", 1440, 1080);
+    loadSuccess = videoProvider.LoadLuxonis("rgb", 1920, 1080);
   } else if (videoSource == "video") {
     loadSuccess =
         videoProvider.LoadVideo(absl::GetFlag(FLAGS_input_video_path));
