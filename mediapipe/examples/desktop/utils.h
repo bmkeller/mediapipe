@@ -21,13 +21,30 @@ class FPSCounter {
 
   void update();
   double getFPS() const;
+  std::string getFPSString() const;
   void display() const;
+
+  int frame_count() const { return frame_count_; }
 
  private:
   const int window_size_;
   int frame_count_;
   double fps_;
   std::chrono::time_point<std::chrono::high_resolution_clock> start_time_;
+};
+
+class IntervalLogger {
+ public:
+  explicit IntervalLogger(std::chrono::duration<double> log_interval)
+      : log_interval_(log_interval) {
+    last_log_time_ = std::chrono::high_resolution_clock::now();
+  }
+
+  bool MaybeLog(int frame_count, double fps, int width, int height);
+
+ private:
+  const std::chrono::duration<double> log_interval_;
+  std::chrono::time_point<std::chrono::high_resolution_clock> last_log_time_;
 };
 
 template <typename K, typename V>

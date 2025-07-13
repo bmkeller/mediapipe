@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "absl/strings/str_format.h"
 #include "mediapipe/framework/port/opencv_highgui_inc.h"
 #include "nlohmann/json.hpp"  // from @com_github_nlohmann_json
 
@@ -44,6 +45,23 @@ cv::Mat loadPlanarRGBToMat(const std::vector<uint8_t>& planarData, int width,
   return image;
 }
 
+bool IntervalLogger::MaybeLog(int frame_count, double fps, int width,
+                              int height) {
+  auto now = std::chrono::high_resolution_clock::now();
+  auto time_diff = std::chrono::duration<double>(now - last_log_time_).count();
+  if (time_diff < log_interval_.count()) {
+    return false;
+  }
+
+  last_log_time_ = now;
+
+  std::cout << absl::StrFormat("[%d @ %1.1f Hz]: Res=%dx%d", frame_count, fps,
+                               width, height)
+            << std::endl;
+
+  return true;
+}
+
 FPSCounter::FPSCounter(int window_size)
     : window_size_(window_size),
       frame_count_(0),
@@ -66,6 +84,12 @@ double FPSCounter::getFPS() const { return fps_; }
 void FPSCounter::display() const {
   std::cout << "[" << frame_count_ << "] FPS: " << std::fixed
             << std::setprecision(1) << fps_ << " Hz" << std::endl;
+}
+
+std::string FPSCounter::getFPSString() const {
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(1) << fps_ << " Hz";
+  return oss.str();
 }
 
 std::string convertLandmarksToJson(

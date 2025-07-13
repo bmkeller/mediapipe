@@ -138,16 +138,18 @@ absl::Status RunMPPGraph() {
 
   ABSL_LOG(INFO) << "Start grabbing and processing frames.";
   bool grab_frames = true;
-  int frame_count = 0;
 
   FPSCounter fps_counter(kFpsWindowSize);
+  IntervalLogger interval_logger(std::chrono::seconds(1));
 
   while (grab_frames) {
     // Capture opencv camera or video frame.
     cv::Mat camera_frame = videoProvider.GetNextFrame();
 
     fps_counter.update();
-    fps_counter.display();
+
+    interval_logger.MaybeLog(fps_counter.frame_count(), fps_counter.getFPS(),
+                             camera_frame.cols, camera_frame.rows);
 
     if (camera_frame.empty()) {
       if (videoProvider.SourceName() == "webcam") {
