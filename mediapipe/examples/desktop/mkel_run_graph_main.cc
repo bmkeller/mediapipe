@@ -48,6 +48,8 @@ ABSL_FLAG(std::string, output_video_path, "",
 
 ABSL_FLAG(std::string, video_source, "webcam", "'webcam', 'lux', 'video.mp4'");
 
+ABSL_FLAG(bool, save_poses, false, "Enables saving poses to disk.");
+
 std::filesystem::path BuildDataCollectionPath() {
   const std::string home_dir = std::string(std::getenv("HOME"));
   std::filesystem::path p = home_dir;
@@ -80,11 +82,13 @@ absl::Status RunMPPGraph() {
     gesture_mappings[key - '1'] = value;
   }
 
-  for (const auto& [_, value] : collection_mappings) {
-    const std::filesystem::path p = BuildDataCollectionPath() / value;
+  if (absl::GetFlag(FLAGS_save_poses)) {
+    for (const auto& [_, value] : collection_mappings) {
+      const std::filesystem::path p = BuildDataCollectionPath() / value;
 
-    if (!std::filesystem::exists(p)) {
-      std::filesystem::create_directories(p);
+      if (!std::filesystem::exists(p)) {
+        std::filesystem::create_directories(p);
+      }
     }
   }
 
@@ -214,7 +218,7 @@ absl::Status RunMPPGraph() {
         const char c = static_cast<char>(pressed_key);
         if (c == 'q' || c == 'Q') {
           grab_frames = false;
-        } else {
+        } else if (absl::GetFlag(FLAGS_save_poses)) {
           const std::string collection_name =
               get_with_default<char, std::string>(collection_mappings, c, "");
           if (!collection_name.empty()) {
