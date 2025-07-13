@@ -1,5 +1,6 @@
 #include "mediapipe/mkel/gesture_detector.h"
 
+#include <array>
 #include <filesystem>
 #include <limits>
 #include <sstream>
@@ -8,6 +9,8 @@
 namespace mediapipe {
 namespace gesture_detection {
 namespace {
+
+constexpr char kFallbackModelPath[] = "./model.tflite";
 
 constexpr char kModelPath[] =
     "/Users/michaelkeller/Documents/code/notebook/output/model.tflite";
@@ -62,16 +65,27 @@ GestureDetector::GestureDetector() { loadTfliteModel(); }
 void GestureDetector::loadTfliteModel() {
   // Load model
   // Check if the file exists
-  if (!std::filesystem::exists(kModelPath)) {
+  std::array kAvailableModelPaths = {kModelPath, kFallbackModelPath};
+
+  const char *model_path = nullptr;
+
+  for (const auto &path : kAvailableModelPaths) {
+    if (std::filesystem::exists(path)) {
+      model_path = path;
+      break;
+    }
+  }
+
+  if (model_path == nullptr) {
     throw std::runtime_error("TFLite model file does not exist: " +
                              std::string(kModelPath));
   }
 
-  model_ = tflite::FlatBufferModel::BuildFromFile(kModelPath);
+  model_ = tflite::FlatBufferModel::BuildFromFile(model_path);
 
   if (!model_) {
     throw std::runtime_error("Failed to load TFLite model from: " +
-                             std::string(kModelPath));
+                             std::string(model_path));
   }
 
   // Build interpreter
