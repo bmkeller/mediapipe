@@ -31,8 +31,7 @@ constexpr char kOutputStream[] = "output_video";
 constexpr char kLandmarksStream[] = "landmarks";
 constexpr char kWindowName[] = "MKEL: MediaPipe";
 constexpr int kFpsWindowSize = 30;  // Calculate FPS over 30 frames
-constexpr char kDataCollectionDir[] =
-    "/Users/michaelkeller/data_collection/hand_poses/";
+constexpr char kDataCollectionDir[] = "data_collection/hand_poses/";
 constexpr int kWindowWidth = 1600;
 constexpr int kWindowHeight = 900;
 
@@ -48,6 +47,13 @@ ABSL_FLAG(std::string, output_video_path, "",
           "If not provided, show result in a window.");
 
 ABSL_FLAG(std::string, video_source, "webcam", "'webcam', 'lux', 'video.mp4'");
+
+std::filesystem::path BuildDataCollectionPath() {
+  const std::string home_dir = std::string(std::getenv("HOME"));
+  std::filesystem::path p = home_dir;
+  p /= kDataCollectionDir;
+  return p;
+}
 
 absl::Status RunMPPGraph() {
   std::string calculator_graph_config_contents;
@@ -75,8 +81,8 @@ absl::Status RunMPPGraph() {
   }
 
   for (const auto& [_, value] : collection_mappings) {
-    std::filesystem::path p = kDataCollectionDir;
-    p /= value;
+    const std::filesystem::path p = BuildDataCollectionPath() / value;
+
     if (!std::filesystem::exists(p)) {
       std::filesystem::create_directories(p);
     }
@@ -213,9 +219,9 @@ absl::Status RunMPPGraph() {
               get_with_default<char, std::string>(collection_mappings, c, "");
           if (!collection_name.empty()) {
             cv::cvtColor(camera_frame, camera_frame, cv::COLOR_BGR2RGB);
-            writeResultsToDisk(
-                std::filesystem::path(kDataCollectionDir) / collection_name,
-                camera_frame, output_frame_mat, multi_norm_landmarks);
+            writeResultsToDisk(BuildDataCollectionPath() / collection_name,
+                               camera_frame, output_frame_mat,
+                               multi_norm_landmarks);
           }
         }
       }
