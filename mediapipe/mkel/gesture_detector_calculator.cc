@@ -95,15 +95,8 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
       gesture_detector_.getHandPositionProbability());
   gesture_.set_hand_position_index(gesture_detector_.getHandPositionCounter());
 
-  // if (gesture.second == 8) {
-  //   gesture_.set_gesture_type(gestures::GestureType::TAP);
-  // } else {
-  //   gesture_.set_gesture_type(gestures::GestureType::NONE);
-  // }
-
-  std::string serialized_gesture = gesture_.SerializeAsString();
-
-  auto predicted_gesture = gesture_detector_.performInference(landmarks[0]);
+  const std::optional<gestures::HandPositions> predicted_gesture =
+      gesture_detector_.performInference(landmarks[0]);
 
   if (predicted_gesture) {
     cc->Outputs()
@@ -112,7 +105,7 @@ absl::Status GestureRecognizerCalculator::Process(CalculatorContext *cc) {
                        .At(cc->InputTimestamp()));
   }
 
-  proto_writer_.Write(serialized_gesture);
+  proto_writer_.Write(gesture_.SerializeAsString());
 
   return absl::OkStatus();
 }
