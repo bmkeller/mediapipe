@@ -10,6 +10,7 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/absl_log.h"
+#include "absl/strings/str_format.h"
 #include "mediapipe/examples/desktop/overlay.h"
 #include "mediapipe/examples/desktop/utils.h"
 #include "mediapipe/framework/calculator_framework.h"
@@ -62,13 +63,13 @@ absl::Status RunMPPGraph() {
   MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
       absl::GetFlag(FLAGS_calculator_graph_config_file),
       &calculator_graph_config_contents));
-  ABSL_LOG(INFO) << "Get calculator graph config contents: "
-                 << calculator_graph_config_contents;
+  // ABSL_LOG(INFO) << "Get calculator graph config contents: "
+  //                << calculator_graph_config_contents;
   mediapipe::CalculatorGraphConfig config =
       mediapipe::ParseTextProtoOrDie<mediapipe::CalculatorGraphConfig>(
           calculator_graph_config_contents);
 
-  ABSL_LOG(INFO) << "Initialize the calculator graph.";
+  ABSL_LOG(INFO) << "Initializing the calculator graph.";
   mediapipe::CalculatorGraph graph;
   MP_RETURN_IF_ERROR(graph.Initialize(config));
 
@@ -107,11 +108,12 @@ absl::Status RunMPPGraph() {
   }
 
   if (!loadSuccess) {
-    return absl::InvalidArgumentError("Failed to load video source: " +
-                                      videoSource);
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Failed to load video source: [%s]", videoSource));
   }
 
-  ABSL_LOG(INFO) << "Successfully load video source: " << videoSource;
+  ABSL_LOG(INFO) << absl::StrFormat("Successfully load video source: [%s]",
+                                    videoSource);
 
   cv::VideoWriter writer;
   const bool save_video = !absl::GetFlag(FLAGS_output_video_path).empty();
@@ -119,7 +121,7 @@ absl::Status RunMPPGraph() {
     const int window_flags = cv::WINDOW_AUTOSIZE;
     cv::namedWindow(kWindowName, window_flags);
 
-    std::cout << "OpenCV version: " << CV_VERSION << std::endl;
+    ABSL_LOG(INFO) << "OpenCV version: " << CV_VERSION;
 
     capture.set(cv::CAP_PROP_FRAME_WIDTH, kWindowWidth);
     capture.set(cv::CAP_PROP_FRAME_HEIGHT, kWindowHeight);
@@ -249,6 +251,6 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   } else {
     ABSL_LOG(INFO) << "Success!";
+    return EXIT_SUCCESS;
   }
-  return EXIT_SUCCESS;
 }
