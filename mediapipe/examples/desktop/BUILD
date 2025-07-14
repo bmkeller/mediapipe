@@ -63,11 +63,13 @@ cc_library(
         "utils.cc",
         "overlay.cc",
         "video_provider.cc",
+        "calibration.cc",
     ],
     hdrs=[
         "utils.h",
         "overlay.h",
         "video_provider.h",
+        "calibration.h",
     ],
     deps=[
         "//mediapipe/framework:calculator_framework",

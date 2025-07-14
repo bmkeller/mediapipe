@@ -11,6 +11,7 @@
 #include "absl/flags/parse.h"
 #include "absl/log/absl_log.h"
 #include "absl/strings/str_format.h"
+#include "calibration.h"
 #include "mediapipe/examples/desktop/overlay.h"
 #include "mediapipe/examples/desktop/utils.h"
 #include "mediapipe/framework/calculator_framework.h"
@@ -220,8 +221,10 @@ absl::Status RunMPPGraph() {
 
       if (pressed_key >= 0 && pressed_key != 255) {
         const char c = static_cast<char>(pressed_key);
-        if (c == 'q' || c == 'Q') {
+        if (c == 'q' || c == 'Q' || c == 27) {
           grab_frames = false;
+        } else if (c == 'c' || c == 'C') {
+          Calibration::ShowCheckerboardWindow();
         } else if (absl::GetFlag(FLAGS_save_poses)) {
           const std::string collection_name =
               get_with_default<char, std::string>(collection_mappings, c, "");
