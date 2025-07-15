@@ -7,13 +7,12 @@
 
 namespace {
 
-cv::Mat createCheckerboard(cv::Size boardSize, int squareSize) {
+cv::Mat createCheckerboard(cv::Size imageSize, cv::Size boardSize) {
   // Add a 1-square margin around the board for a "quiet zone"
-  int margin = squareSize * 0;
-  cv::Size imageSize = cv::Size(boardSize.width * squareSize + margin * 2,
-                                boardSize.height * squareSize + margin * 2);
+  int squareWidth = imageSize.width / boardSize.width;
+  int squareHeight = imageSize.height / boardSize.height;
 
-  // Create a white canvas
+  // Create a white background canvas
   cv::Mat board(imageSize, CV_8UC3, cv::Scalar(255, 255, 255));
 
   // Color for the dark squares
@@ -25,14 +24,16 @@ cv::Mat createCheckerboard(cv::Size boardSize, int squareSize) {
       // Only draw the black squares
       if ((r + c) % 2 == 0) {
         // Define the top-left corner of the square
-        cv::Point topLeft(margin + c * squareSize, margin + r * squareSize);
-        cv::Point bottomRight(topLeft.x + squareSize, topLeft.y + squareSize);
+        cv::Point topLeft(c * squareWidth, r * squareHeight);
+        cv::Point bottomRight(topLeft.x + squareWidth,
+                              topLeft.y + squareHeight);
 
         // Draw the filled black square
         cv::rectangle(board, topLeft, bottomRight, black, cv::FILLED);
       }
     }
   }
+
   return board;
 }
 
@@ -41,10 +42,21 @@ cv::Mat createCheckerboard(cv::Size boardSize, int squareSize) {
 void Calibration::ShowCheckerboardWindow() {
   ABSL_LOG(INFO) << "Showing checkerboard window.";
 
-  // 1. Create a checkerboard image (or any other image)
+  // Create a full screen window.
+  constexpr char kWindowName[] = "Checkerboard";
+  cv::namedWindow(kWindowName, cv::WINDOW_NORMAL);
+  cv::setWindowProperty(kWindowName, cv::WND_PROP_FULLSCREEN,
+                        cv::WINDOW_FULLSCREEN);
+
+  // Wait for the window to be created.
+  //   cv::waitKey(3000);
+  cv::Size windowSize(1710, 1107);
+
+  ABSL_LOG(INFO) << "Window size: " << windowSize;
+
+  // Generate a checkerboard image.
   cv::Size boardDimensions(9, 6);
-  int squareSize = 80;
-  cv::Mat checkerboard = createCheckerboard(boardDimensions, squareSize);
+  cv::Mat checkerboard = createCheckerboard(windowSize, boardDimensions);
 
   // In a real scenario, you would draw your checkerboard here.
   cv::putText(checkerboard, "Calibration Screen - Press ESC to close",
@@ -63,10 +75,5 @@ void Calibration::ShowCheckerboardWindow() {
   cv::line(checkerboard, cv::Point(checkerboard.cols, 0),
            cv::Point(0, checkerboard.rows), lineColor, lineThickness);
 
-  // 2. Create and display the temporary window
-  std::string calibWindowName = "Checkerboard";
-  cv::namedWindow(calibWindowName, cv::WINDOW_NORMAL);
-  cv::setWindowProperty(calibWindowName, cv::WND_PROP_FULLSCREEN,
-                        cv::WINDOW_FULLSCREEN);
-  cv::imshow(calibWindowName, checkerboard);
+  cv::imshow(kWindowName, checkerboard);
 }
