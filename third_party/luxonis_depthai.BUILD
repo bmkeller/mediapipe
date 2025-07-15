@@ -13,11 +13,18 @@ cc_import(
     shared_library = "build/libdepthai-core.dylib",
 )
 
-# Define the library with headers and link it to the imported static library
+# Define the library with headers
 cc_library(
     name = "luxonis_depthai",
-    hdrs = glob(["src/mkel_wrappers/**/*.h"]) + glob(["include/depthai/**/*.hpp"]) + glob(["shared/depthai-shared/include/depthai-shared/**/*.hpp"]),
-    includes = [ "src/mkel_wrappers/", "include/depthai/", "shared/depthai-shared/include/"],  # Set the base path for includes
+    hdrs = 
+        glob(["src/mkel_wrappers/**/*.h"]) + 
+        glob(["include/depthai/**/*.hpp"]) + 
+        glob(["shared/depthai-shared/include/depthai-shared/**/*.hpp"]),
+    includes = [ 
+        "src/mkel_wrappers/", 
+        "include/depthai/", 
+        "shared/depthai-shared/include/"
+    ],
     #deps = [":luxonis_depthai_lib", ":luxonis_depthai_resources_lib"],
     deps = [":luxonis_depthai_core_dylib"],
     visibility = ["//visibility:public"],
